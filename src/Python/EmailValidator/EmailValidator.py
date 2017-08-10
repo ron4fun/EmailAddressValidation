@@ -28,10 +28,8 @@ from ctypes import pointer, c_int
 class EmailValidator(object):
     _AtomCharacters = "!#$%&'*+-/=?^_`{|}~"
 
-    def __init__(self):
-        pass
-
-    def validate(self, email, allowInternational=False):
+    @staticmethod
+    def validate(email, allowInternational=False):
         placeValue = c_int(0)
         s = pointer(placeValue)
         index = s.contents
@@ -42,7 +40,7 @@ class EmailValidator(object):
         if (len(email) == 0):
             return False
 
-        if (not self.__skipWord(email, index, allowInternational) or index.value >= len(email)):
+        if (not EmailValidator.__skipWord(email, index, allowInternational) or index.value >= len(email)):
             return False
 
         while (email[index.value] == '.'):
@@ -51,7 +49,7 @@ class EmailValidator(object):
             if (index.value >= len(email)):
                 return False
 
-            if (not self.__skipWord(email, index, allowInternational)):
+            if (not EmailValidator.__skipWord(email, index, allowInternational)):
                 return False
 
             if (index.value >= len(email)):
@@ -64,7 +62,7 @@ class EmailValidator(object):
 
         if (email[index.value] != '['):
             # domain
-            if (not self.__skipDomain(email, index, allowInternational)):
+            if (not EmailValidator.__skipDomain(email, index, allowInternational)):
                 return False
             return index.value == len(email)
 
@@ -79,10 +77,10 @@ class EmailValidator(object):
 
         if (ipv6 == "ipv6:"):
             index.value += len("IPv6:")
-            if (not self.__skipIPv6Literal(email, index)):
+            if (not EmailValidator.__skipIPv6Literal(email, index)):
                 return False;
         else:
-            if (not self.__skipIPv4Literal(email, index)):
+            if (not EmailValidator.__skipIPv4Literal(email, index)):
                 return False
 
         if (index.value >= len(email) or email[index.value] != ']'):
@@ -92,48 +90,55 @@ class EmailValidator(object):
 
         return index.value == len(email)
 
-    def __isLetterOrDigit(self, c):
+    @staticmethod
+    def __isLetterOrDigit(c):
         if c.isdigit() or c.isalpha():
             return True
         return False
-    
-    def __isAtom(self, c, allowInternational):
+
+    @staticmethod
+    def __isAtom(c, allowInternational):
         if ord(c) < 128:
             check = True if EmailValidator._AtomCharacters.find(c) != -1 else False
-            return self.__isLetterOrDigit(c) or check
+            return EmailValidator.__isLetterOrDigit(c) or check
         return allowInternational
 
-    def __isDomain(self, c, allowInternational):
+    @staticmethod
+    def __isDomain(c, allowInternational):
         if ord(c) < 128:
-            return self.__isLetterOrDigit(c) or c == '-'
+            return EmailValidator.__isLetterOrDigit(c) or c == '-'
         return allowInternational
 
-    def __skipAtom(self, text, index, allowInternational):	
+    @staticmethod
+    def __skipAtom(text, index, allowInternational):	
         startIndex = index.value
-        while (index.value < len(text) and self.__isAtom(text[index.value], allowInternational)):
+        while (index.value < len(text) and EmailValidator.__isAtom(text[index.value], allowInternational)):
             index.value += 1
         return index.value > startIndex
 
-    def __skipSubDomain(self, text, index, allowInternational):
-        if (not self.__isDomain(text[index.value], allowInternational) or text[index.value] == '-'):
+    @staticmethod
+    def __skipSubDomain(text, index, allowInternational):
+        if (not EmailValidator.__isDomain(text[index.value], allowInternational) or text[index.value] == '-'):
             return False
         index.value += 1
-        while (index.value < len(text) and self.__isDomain(text[index.value], allowInternational)):
+        while (index.value < len(text) and EmailValidator.__isDomain(text[index.value], allowInternational)):
             index.value += 1
         return True
-	    
-    def __skipDomain(self, text, index, allowInternational):
-        if (not self.__skipSubDomain(text, index, allowInternational)):
+
+    @staticmethod
+    def __skipDomain(text, index, allowInternational):
+        if (not EmailValidator.__skipSubDomain(text, index, allowInternational)):
                 return False
         while(index.value < len(text) and text[index.value] == '.'):
             index.value += 1
             if (index.value == len(text)):
                 return False
-            if (not self.__skipSubDomain(text, index, allowInternational)):
+            if (not EmailValidator.__skipSubDomain(text, index, allowInternational)):
                 return False
         return True
 
-    def __skipQuoted(self, text, index, allowInternational):
+    @staticmethod
+    def __skipQuoted(text, index, allowInternational):
         escaped = False
 
         # skip over leading '"'
@@ -155,19 +160,22 @@ class EmailValidator(object):
             return False
         index.value += 1
         return True
-		
-    def __skipWord(self, text, index, allowInternational):
+
+    @staticmethod
+    def __skipWord(text, index, allowInternational):
         if (text[index.value] == '"'):
-                return self.__skipQuoted(text, index, allowInternational)
-        return self.__skipAtom(text, index, allowInternational)
-    
-    def __isHexDigit(self, c):
+                return EmailValidator.__skipQuoted(text, index, allowInternational)
+        return EmailValidator.__skipAtom(text, index, allowInternational)
+
+    @staticmethod
+    def __isHexDigit(c):
         s = "ABCDEFabcdef0123456789"
         if s.find(c) != -1:
             return True
         return False
 
-    def __skipIPv4Literal(self, text, index):
+    @staticmethod
+    def __skipIPv4Literal(text, index):
         groups = 0
 
         while (index.value < len(text) and groups < 4):
@@ -187,15 +195,16 @@ class EmailValidator(object):
                 index.value += 1
 
         return groups == 4
- 
-    def __skipIPv6Literal(self, text, index):
+
+    @staticmethod
+    def __skipIPv6Literal(text, index):
         compact = False
         colons = 0
 
         while (index.value < len(text)):
             startIndex = index.value
 
-            while(index.value < len(text) and self.__isHexDigit(text[index.value])):
+            while(index.value < len(text) and EmailValidator.__isHexDigit(text[index.value])):
                 index.value += 1
 
             if (index.value >= len(text)):
@@ -205,7 +214,7 @@ class EmailValidator(object):
                 # IPv6v4
                 index.value = startIndex
 
-                if (not self.__skipIPv4Literal(text, index)):
+                if (not EmailValidator.__skipIPv4Literal(text, index)):
                     return False;
                 break
 
@@ -243,5 +252,4 @@ class EmailValidator(object):
 
 
 if __name__ == '__main__':
-    email = EmailValidator()
-		
+    print EmailValidator.validate(u"чебурашка@ящик-с-апельсинами.рф", True)

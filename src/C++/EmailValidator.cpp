@@ -7,15 +7,15 @@ Copyright (c) 2015 Mbadiwe Nnaemeka Ronald ron2tele@gmail.com
     Permission is granted to anyone to use this software for any purpose,
     including commercial applications, and to alter it and redistribute it
     freely, subject to the following restrictions:
-    
+
     1. The origin of this software must not be misrepresented; you must not
     claim that you wrote the original software. If you use this software
     in a product, an acknowledgment in the product documentation must be
     specified.
-    
+
     2. Altered source versions must be plainly marked as such, and must not be
     misrepresented as being the original software.
-    
+
     3. This notice may not be removed or altered from any source distribution.
 */
 
@@ -25,21 +25,16 @@ using namespace std;
 
 const char *EmailValidator::AtomCharacters = "!#$%&'*+-/=?^_`{|}~";
 
-EmailValidator::EmailValidator()
-{
-    //ctor
-} // end constructor
-
-bool EmailValidator::skipIPv4Literal(const char *text, int * const index)
+bool EmailValidator::skipIPv4Literal(const wchar_t *text, int * const index)
 {
     int groups = 0;
 
-    while (*index < strlen(text) && groups < 4) {
+    while (*index < wcslen(text) && groups < 4) {
         int startIndex = *index;
-        int value = 0;
+        unsigned int value = 0;
 
-        while(*index < strlen(text) && text[*index] >= '0' && text[*index] <= '9') {
-            value = (value * 10) + (text[*index] - '0');
+        while(*index < wcslen(text) && (unsigned int)(text[*index]) >= '0' && (unsigned int)(text[*index]) <= '9') {
+            value = (value * 10) + ((unsigned int)(text[*index]) - '0');
             (*index)++;
         } // end while
 
@@ -48,7 +43,7 @@ bool EmailValidator::skipIPv4Literal(const char *text, int * const index)
 
         groups++;
 
-        if (groups < 4 && *index < strlen(text) && text[*index] == '.')
+        if (groups < 4 && *index < wcslen(text) && (unsigned int)(text[*index]) == '.')
             (*index)++;
     } // end while
 
@@ -71,21 +66,21 @@ bool EmailValidator::skipIPv4Literal(const char *text, int * const index)
 //             ; No more than 4 groups in addition to the "::" and
 //             ; IPv4-address-literal may be present
 
-bool EmailValidator::skipIPv6Literal(const char *text, int * const index)
+bool EmailValidator::skipIPv6Literal(const wchar_t *text, int * const index)
 {
     bool compact = false;
     int colons = 0;
 
-    while (*index < strlen(text)) {
+    while (*index < wcslen(text)) {
         int startIndex = *index;
 
-        while(*index < strlen(text) && isHexDigit(text[*index]))
+        while(*index < wcslen(text) && isHexDigit(text[*index]))
             (*index)++;
 
-        if (*index >= strlen(text))
+        if (*index >= wcslen(text))
             break;
 
-        if (*index > startIndex && colons > 2 && text[*index] == '.') {
+        if (*index > startIndex && colons > 2 && (unsigned int)(text[*index]) == '.') {
             // IPv6v4
             *index = startIndex;
 
@@ -99,11 +94,11 @@ bool EmailValidator::skipIPv6Literal(const char *text, int * const index)
         if (count > 4)
             return false;
 
-        if (text[*index] != ':')
+        if ((unsigned int)(text[*index]) != ':')
             break;
 
         startIndex = *index;
-        while (*index < strlen(text) && text[*index] == ':')
+        while (*index < wcslen(text) && (unsigned int)(text[*index]) == ':')
             (*index)++;
 
         count = *index - startIndex;
@@ -145,57 +140,57 @@ bool EmailValidator::skipIPv6Literal(const char *text, int * const index)
 /// <paramref name="email"/> is <c>null</c>.
 /// </exception>
 
-bool EmailValidator::validate(const char *email, bool allowInternational)
+bool EmailValidator::validate(const wchar_t *email, bool allowInternational)
 {
     int index = 0;
 
     if (email == NULL)
         throw invalid_argument("email is null");
 
-    if (strlen(email) == 0)
+    if (wcslen(email) == 0)
         return false;
 
-    if (!skipWord(email, &index, allowInternational) || index >= strlen(email))
+    if (!skipWord(email, &index, allowInternational) || index >= wcslen(email))
         return false;
 
-    while (email[index] == '.') {
+    while ((unsigned int)(email[index]) == '.') {
         index++;
 
-        if (index >= strlen(email))
+        if (index >= wcslen(email))
             return false;
 
         if (!skipWord(email, &index, allowInternational))
             return false;
 
-        if (index >= strlen(email))
+        if (index >= wcslen(email))
             return false;
     }
 
-    if (index + 1 >= strlen(email) || email[index++] != '@')
+    if (index + 1 >= wcslen(email) || (unsigned int)(email[index++]) != '@')
         return false;
 
-    if (email[index] != '[') {
+    if ((unsigned int)(email[index]) != '[') {
         // domain
         if (!skipDomain(email, &index, allowInternational))
             return false;
 
-        return index == strlen(email);
+        return index == wcslen(email);
     } // end if
 
     // address literal
     index++;
 
     // we need at least 8 more characters
-    if (index + 8 >= strlen(email))
+    if (index + 8 >= wcslen(email))
         return false;
 
-    char *ipv6 = new char[7]; //email.Substring (index, 5);
-    memset(ipv6, 0, 7);
-    memcpy(ipv6, &email[index], 5);
+    wchar_t *ipv6 = new wchar_t[7]; //email.Substring (index, 5);
+    wmemset(ipv6, 0, 7);
+    wmemcpy(ipv6, &email[index], 5);
 
     lowerCase(ipv6);
-    if (strcmp(ipv6, "ipv6:") != -1) {
-        index += strlen("IPv6:");
+    if (wcscmp(ipv6, L"ipv6:") != -1) {
+        index += wcslen(L"IPv6:");
         if (!skipIPv6Literal(email, &index))
             return false;
     } else {
@@ -203,13 +198,13 @@ bool EmailValidator::validate(const char *email, bool allowInternational)
             return false;
     }
 
-    if (index >= strlen(email) || email[index++] != ']')
+    if (index >= wcslen(email) || (unsigned int)(email[index++]) != ']')
         return false;
 
     if(ipv6)
         delete ipv6;
 
-    return index == strlen(email);
+    return index == wcslen(email);
 
 } // end func validate
 

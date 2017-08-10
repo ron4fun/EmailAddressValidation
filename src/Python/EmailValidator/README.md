@@ -1,7 +1,7 @@
-#EmailValidation Class#
+#Email Validator#
 
 
-A Python implementation of email validation class. Tested on Python 2.7 and worked well.
+A Python implementation of email validator class. Tested on Python 2.7 and worked well.
 
 
 
@@ -11,9 +11,8 @@ Example
 
 
     
-    >>> from EmailValidator import
-	>>> email = EmailValidator()
-	>>> email.validate("valid.ipv6v4.addr@[IPv6:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:127.0.0.1]")
+    >>> from EmailValidator import *
+	>>> EmailValidator.validate("valid.ipv6v4.addr@[IPv6:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:127.0.0.1]")
 	>>> True
 	
 

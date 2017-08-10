@@ -1,7 +1,7 @@
-#EmailValidation Class#
+#Email Validator#
 
 
-A C++ class implementation of email validation class.
+A C++ class implementation of email validator class. Run the main.cpp file for tests. 
 
 
 Example
@@ -11,22 +11,118 @@ Example
 
     
     #include <iostream>
+	#include <wchar.h>
 	#include <windows.h>
+	#include <vector>
 	#include "EmailValidator.h"
+
 	using namespace std;
 
 	int main()
 	{
-	    EmailValidator ev;
+	    vector<wchar_t *> ValidAddresses =
+	    {
+	        L"\"Abc\\@def\"@example.com",
+	        L"\"Fred Bloggs\"@example.com",
+	        L"\"Joe\\\\Blow\"@example.com",
+	        L"\"Abc@def\"@example.com",
+	        L"customer/department=shipping@example.com",
+	        L"$A12345@example.com",
+	        L"!def!xyz%abc@example.com",
+	        L"_somename@example.com",
+	        L"valid.ipv4.addr@[123.1.72.10]",
+	        L"valid.ipv6.addr@[IPv6:0::1]",
+	        L"valid.ipv6.addr@[IPv6:2607:f0d0:1002:51::4]",
+	        L"valid.ipv6.addr@[IPv6:fe80::230:48ff:fe33:bc33]",
+	        L"valid.ipv6v4.addr@[IPv6:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:127.0.0.1]",
 	
-	    if(ev.validate("valid.ipv6v4.addr@[IPv6:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:127.0.0.1]"))
-	        MessageBoxA(NULL,"Valid", "Email Status", MB_OK || MB_ICONINFORMATION);
-	    else
-	        MessageBoxA(NULL,"Invalid", "Email Status", MB_OK || MB_ICONERROR);
+	        // examples from wikipedia
+	        L"niceandsimple@example.com",
+	        L"very.common@example.com",
+	        L"a.little.lengthy.but.fine@dept.example.com",
+	        L"disposable.style.email.with+symbol@example.com",
+	        L"user@[IPv6:2001:db8:1ff::a0b:dbd0]",
+	        L"\"much.more unusual\"@example.com",
+	        L"\"very.unusual.@.unusual.com\"@example.com",
+	        L"\"very.(),:;<>[]\\\".VERY.\\\"very@\\\\ \\\"very\\\".unusual\"@strange.example.com",
+	        L"postbox@com",
+	        L"admin@mailserver1",
+	        L"!#$%&'*+-/=?^_`{}|~@example.org",
+	        L"\"()<>[]:,;@\\\\\\\"!#$%&'*+-/=?^_`{}| ~.a\"@example.org",
+	        L"\" \"@example.org"
+	    };
+	
+	    vector<wchar_t *> InvalidAddresses =
+	    {
+	        L"",
+	        L"invalid",
+	        L"invalid@",
+	        L"invalid @",
+	        L"invalid@[555.666.777.888]",
+	        L"invalid@[IPv6:123456]",
+	        L"invalid@[127.0.0.1.]",
+	        L"invalid@[127.0.0.1].",
+	        L"invalid@[127.0.0.1]x",
+	
+	        // examples from wikipedia
+	        L"Abc.example.com",
+	        L"A@b@c@example.com",
+	        L"a\"b(c)d,e:f;g<h>i[j\\k]l@example.com",
+	        L"just\"not\"right@example.com",
+	        L"this is\"not\\allowed@example.com",
+	        L"this\\ still\\\"not\\\\allowed@example.com",
+	
+	        // examples of real (invalid) input from real users.
+	        L"No longer available.",
+	        L"Moved."
+	    };
+	
+	    vector<wchar_t *> ValidInternationalAddresses =
+	    {
+	        L"伊昭傑@郵件.商務", // Chinese
+	        L"राम@मोहन.ईन्फो", // Hindi
+	        L"юзер@екзампл.ком", // Ukranian
+	        L"θσερ@εχαμπλε.ψομ", // Greek
+	    };
+	
+	    for(size_t i = 0; i < ValidAddresses.size(); i++)
+	    {
+	        if(!EmailValidator::validate(ValidAddresses[i]))
+	        {
+	            cout << "Test 1 failed..." << endl;
+	            MessageBoxW(NULL, ValidAddresses[i], L"Report", MB_OK || MB_ICONINFORMATION);
+	        } // end if
+	    } // end for
+	
+	    for(size_t i = 0; i < InvalidAddresses.size(); i++)
+	    {
+	        if(EmailValidator::validate(InvalidAddresses[i]))
+	        {
+	            cout << "Test 2 failed..." << endl;
+	            MessageBoxW(NULL, InvalidAddresses[i], L"Report", MB_OK || MB_ICONINFORMATION);
+	        } // end if
+	    } // end for
+	
+	    for(size_t i = 0; i < ValidInternationalAddresses.size(); i++)
+	    {
+	        if(!EmailValidator::validate(ValidInternationalAddresses[i], true))
+	        {
+	            cout << "Test 3 failed..." << endl;
+	            MessageBoxW(NULL, ValidInternationalAddresses[i], L"Report", MB_OK || MB_ICONINFORMATION);
+	        } // end if
+	    } // end for
+	
+	    cout << "Testing Done!" << endl;
 	
 	    return 0;
 	}
 
+Note
+------
+
+	All of the strings passed to the Email validator class are wchar_t (wide char UTF-8) 
+	to cover for non-English characters that are above the ascii range.
+	
 License
 ----------
     Copyright (c) 2015 Mbadiwe Nnaemeka Ronald ron2tele@gmail.com
